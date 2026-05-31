@@ -39,11 +39,9 @@ export async function scrapeGoogleMaps(
   const location = locationMap[country.toLowerCase()] || country
 
   const input = {
-   狭: keyword,
-    location: location,
+    queries: [{ term: keyword, location: location }],
     maxItems,
     maxConcurrency: 5,
-    scrape: ['email', 'phones', 'urls', 'addresses'],
   }
 
   try {
@@ -87,11 +85,12 @@ export async function scrapeWebsiteEmails(urls: string[]): Promise<Record<string
 
 export async function enrichWithApifyEmails(places: ApifyPlace[]): Promise<ApifyPlace[]> {
   const placesWithEmail = places.filter((p) => p.emails?.length || p.email)
+
+  // Try to get emails from website scraper for places without emails
   const placesNeedingScrape = places.filter(
     (p) => !p.emails?.length && !p.email && (p.websiteUrl || p.url)
   )
 
-  // Try to get emails from website scraper for places without emails
   const websites = placesNeedingScrape
     .map((p) => p.websiteUrl || p.url)
     .filter(Boolean) as string[]
@@ -106,5 +105,13 @@ export async function enrichWithApifyEmails(places: ApifyPlace[]): Promise<Apify
     })
   }
 
-  return placesNeedingScrape
+  // Return ALL places (with original emails + enriched emails)
+  return places.map((place) => {
+    if (place.emails?.length || place.email) return place
+    const site = place.websiteUrl || place.url
+    if (site && (place as any).enrichedEmail) {
+      return { ...place, email: (place as any).enrichedEmail }
+    }
+    return place
+  })
 }

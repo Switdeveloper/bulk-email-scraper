@@ -1,0 +1,12 @@
+{
+  "settings": {
+    "brevoApiKey": "",
+    "apifyApiKey": "",
+    "senderEmail": "switdeveloper@gmail.com",
+    "senderName": "Swit Developer",
+    "emailSubject": "Quick question about your website"
+  },
+  "leads": [],
+  "campaigns": [],
+  "sentLog": []
+}
