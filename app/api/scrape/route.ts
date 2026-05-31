@@ -2,7 +2,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { scrapeGoogleMaps, enrichWithApifyEmails } from '@/lib/apify'
 import { addLeads, Lead } from '@/lib/db'
-import { v4 as uuid } from 'crypto'
 
 export const runtime = 'nodejs'
 

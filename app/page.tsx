@@ -23,7 +23,7 @@ const api = {
   },
   async getSettings(): Promise<Settings> { const r = await fetch('/api/settings'); return r.json() },
   async saveSettings(s: Partial<Settings>): Promise<void> { await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s) }) },
-  async scrape(keyword: string, country: string): Promise<{ withEmails: number; saved: number }> {
+  async scrape(keyword: string, country: string): Promise<{ totalFound: number; withEmails: number; saved: number }> {
     const r = await fetch('/api/scrape', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keyword, country, maxItems: 30 }) })
     return r.json()
   },
