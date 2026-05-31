@@ -38,22 +38,28 @@ export async function scrapeGoogleMaps(
 
   const location = locationMap[country.toLowerCase()] || country
 
+  // Use compass~crawler-google-places (paid actor: ~$2.10 per 1000 places, extracts emails)
   const input = {
     queries: [{ term: keyword, location: location }],
     maxItems,
-    maxConcurrency: 5,
+    scrapeEmails: true, // Enable email extraction (key feature!)
+    reviewsLimit: 0,     // Skip reviews to save credits
+    output: { format: 'json' },
   }
 
   try {
     const response = await axios.post(
-      'https://api.apify.com/v2/acts/apify~google-maps-scraper/run-sync-get-dataset-items',
+      'https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items',
       { input },
       {
         params: { token: process.env.APIFY_API_KEY },
-        timeout: 60000,
+        timeout: 120000, // 2 min timeout for paid actor
       }
     )
-    return response.data?.data || []
+    const items: ApifyPlace[] = response.data?.data || []
+    console.log(`[Apify] Got ${items.length} places, filtering for emails...`)
+    // Return only places that have emails
+    return items.filter((p) => p.emails?.length || p.email)
   } catch (error: any) {
     console.error('Apify scrape error:', error?.response?.data || error.message)
     return []
@@ -83,10 +89,9 @@ export async function scrapeWebsiteEmails(urls: string[]): Promise<Record<string
   }
 }
 
+// Keep email enrichment separate for cases where the paid actor returns no emails
 export async function enrichWithApifyEmails(places: ApifyPlace[]): Promise<ApifyPlace[]> {
-  const placesWithEmail = places.filter((p) => p.emails?.length || p.email)
-
-  // Try to get emails from website scraper for places without emails
+  // The paid actor already extracts emails — only scrape websites for places without emails
   const placesNeedingScrape = places.filter(
     (p) => !p.emails?.length && !p.email && (p.websiteUrl || p.url)
   )
@@ -105,7 +110,6 @@ export async function enrichWithApifyEmails(places: ApifyPlace[]): Promise<Apify
     })
   }
 
-  // Return ALL places (with original emails + enriched emails)
   return places.map((place) => {
     if (place.emails?.length || place.email) return place
     const site = place.websiteUrl || place.url
