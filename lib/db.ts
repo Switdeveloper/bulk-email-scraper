@@ -2,7 +2,9 @@
 import fs from 'fs'
 import path from 'path'
 
-const DATA_DIR = path.join(process.cwd(), 'data')
+// Use /tmp on Vercel serverless (writable), fallback to cwd for local dev
+const isVercel = process.env.VERCEL === '1'
+const DATA_DIR = isVercel ? '/tmp/data' : path.join(process.cwd(), 'data')
 const DB_FILE = path.join(DATA_DIR, 'db.json')
 
 function ensureDir() {
